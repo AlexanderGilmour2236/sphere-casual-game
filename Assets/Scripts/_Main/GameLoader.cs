@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace sphereGame
 {
@@ -11,6 +13,14 @@ namespace sphereGame
         {
             _sgApp = new SGApp(new SGGameNavigator(_sgSceneAccessor, null), new SGServicesLoader());
             _sgApp.start();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyUp(KeyCode.R))
+            {
+                SceneManager.LoadScene("Scenes/MainScene");
+            }
         }
     }
 }

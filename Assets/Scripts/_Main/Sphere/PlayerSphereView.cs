@@ -6,9 +6,9 @@ namespace sphereGame
     {
         [SerializeField] private InflateComponent _inflateComponent;
 
-        public void addSphereSize(float addedSphereSize)
+        public InflateComponent inflateComponent
         {
-            _inflateComponent.addSphereSize(addedSphereSize);
+            get { return _inflateComponent; }
         }
     }
 }
