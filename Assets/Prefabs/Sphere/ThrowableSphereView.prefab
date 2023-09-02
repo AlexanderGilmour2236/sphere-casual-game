@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 2266814027930780441}
   - component: {fileID: 2695985202692843549}
   - component: {fileID: 6839137125480366903}
-  - component: {fileID: 282730323679547995}
+  - component: {fileID: 4844209241052967061}
   m_Layer: 0
   m_Name: ThrowableSphereView
-  m_TagString: Untagged
+  m_TagString: Throwable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inflateComponent: {fileID: 6839137125480366903}
-  _rigidbody: {fileID: 282730323679547995}
+  _rigidbody: {fileID: 4844209241052967061}
   _sphereSpeed: 5
   _maxVelocity: 20
 --- !u!114 &6839137125480366903
@@ -66,7 +66,7 @@ MonoBehaviour:
   _currentTargetScale: 1
   _inflateTransform: {fileID: 2266814028280185958}
   _inflateLerpSpeed: 0.3
---- !u!54 &282730323679547995
+--- !u!54 &4844209241052967061
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -93,10 +93,11 @@ GameObject:
   - component: {fileID: 2266814028280185958}
   - component: {fileID: 2266814028280185957}
   - component: {fileID: 2266814028280185956}
-  - component: {fileID: 2266814028280185959}
+  - component: {fileID: 8952856305302042876}
+  - component: {fileID: 1318975219186210879}
   m_Layer: 0
   m_Name: sphereModel
-  m_TagString: Untagged
+  m_TagString: Throwable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -166,8 +167,24 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &2266814028280185959
-SphereCollider:
+--- !u!54 &8952856305302042876
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2266814028280185953}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!65 &1318975219186210879
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -177,5 +194,5 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.963292, y: 13.509688, z: 1}
+  m_Center: {x: 0, y: -5.877026, z: 0}

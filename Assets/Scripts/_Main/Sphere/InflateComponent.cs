@@ -33,5 +33,10 @@ namespace sphereGame
         {
             return new Vector3(scaleMagnitude, scaleMagnitude, scaleMagnitude);
         }
+
+        public float currentTargetScale
+        {
+            get { return _currentTargetScale; }
+        }
     }
 }

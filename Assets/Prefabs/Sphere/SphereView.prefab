@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inflateComponent: {fileID: 5751952832847903850}
+  _markMaterial: {fileID: 2100000, guid: 2c18ea329ddf1274d84cf01ec02f2ba3, type: 2}
 --- !u!114 &5751952832847903850
 MonoBehaviour:
   m_ObjectHideFlags: 0

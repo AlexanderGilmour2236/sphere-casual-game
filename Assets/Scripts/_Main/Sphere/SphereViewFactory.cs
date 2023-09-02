@@ -5,7 +5,7 @@ namespace sphereGame
     public class SphereViewFactory : MonoBehaviour
     {
         [SerializeField] private PlayerSphereView _defaultPlayerSphereViewPrefab;
-        [SerializeField] private ThrowableSphereView _throwableSphereViewPrefab;
+        [SerializeField] private ThrowableView _throwableViewPrefab;
 
         public PlayerSphereView getPlayerSphereView(SphereData sphereData)
         {
@@ -14,10 +14,10 @@ namespace sphereGame
             return playerSphereView;
         }
 
-        public ThrowableSphereView getThrowableSphereView()
+        public ThrowableView getThrowableSphereView()
         {
-            ThrowableSphereView sphereView = Instantiate(_throwableSphereViewPrefab);
-            return sphereView;
+            ThrowableView view = Instantiate(_throwableViewPrefab);
+            return view;
         }
     }
 }

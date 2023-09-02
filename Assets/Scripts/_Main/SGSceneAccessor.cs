@@ -1,4 +1,5 @@
-﻿using tuesdayPizza;
+﻿using System.Collections.Generic;
+using tuesdayPizza;
 using UnityEngine;
 
 namespace sphereGame
@@ -9,6 +10,7 @@ namespace sphereGame
         [SerializeField] private SphereViewFactory _sphereViewFactory;
         [SerializeField] private Transform _levelStartPoint;
         [SerializeField] private SphereData _defaultSphereData;
+        [SerializeField] private List<ObstacleView> _obstacleViews;
 
         public InputSystem inputSystem
         {
@@ -28,6 +30,11 @@ namespace sphereGame
         public SphereViewFactory sphereViewFactory
         {
             get { return _sphereViewFactory; }
+        }
+
+        public List<ObstacleView> obstacleViews
+        {
+            get { return _obstacleViews; }
         }
     }
 }
