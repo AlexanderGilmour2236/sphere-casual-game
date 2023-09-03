@@ -27,6 +27,16 @@ namespace sphereGame
             _isThrowed = true;
         }
 
+        public void throwAtObstacle(Transform obstacleTransform)
+        {
+            _isHitObstacle = true;
+            Vector3 forceToObstacle = Vector3.down * _rigidbody.velocity.magnitude;
+            Vector3 direction = obstacleTransform.position - transform.position;
+            forceToObstacle += direction * _sphereSpeed;
+
+            _rigidbody.AddForce(forceToObstacle, ForceMode.VelocityChange);
+        }
+
         public InflateComponent inflateComponent
         {
             get { return _inflateComponent; }
@@ -37,9 +47,9 @@ namespace sphereGame
             get { return _isThrowed; }
         }
 
-        public void onHitObstacle()
+        public bool isHitObstacle
         {
-            _isHitObstacle = true;
+            get { return _isHitObstacle; }
         }
     }
 }

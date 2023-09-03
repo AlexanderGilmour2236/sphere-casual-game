@@ -10,7 +10,7 @@ namespace sphereGame
         public PlayerSphereView getPlayerSphereView(SphereData sphereData)
         {
             PlayerSphereView playerSphereView = Instantiate(_defaultPlayerSphereViewPrefab);
-            playerSphereView.inflateComponent.setSize(sphereData.startScale);
+            playerSphereView.inflateComponent.setSize(sphereData.startScale, true);
             return playerSphereView;
         }
 

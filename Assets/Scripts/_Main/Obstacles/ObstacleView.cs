@@ -9,8 +9,8 @@ namespace sphereGame
     {
         [SerializeField] private List<MeshRenderer> _meshRenderers;
 
-        private bool _obstacleCollided = false;
-        
+        private bool _isObstacleCollided = false;
+
         public event Action<ObstacleView, ThrowableView> obstacleCollided;
 
         public void setObstacleMarked(Material markMaterial)
@@ -26,14 +26,23 @@ namespace sphereGame
                 meshRenderer.materials = newMaterials;
             }
         }
-        
+
         private void OnTriggerEnter(Collider other)
         {
-            if (!_obstacleCollided && other.CompareTag(SphereGameTags.THROWABLE_TAG))
+            if (!_isObstacleCollided && other.CompareTag(SphereGameTags.THROWABLE_TAG))
             {
-                _obstacleCollided = true;
-                obstacleCollided?.Invoke(this, other.GetComponentInParent<ThrowableView>());
+                ThrowableView throwableView = other.GetComponentInParent<ThrowableView>();
+                if (!throwableView.isHitObstacle)
+                {
+                    _isObstacleCollided = true;
+                    obstacleCollided?.Invoke(this, throwableView);
+                }
             }
+        }
+        
+        public bool isObstacleCollided
+        {
+            get { return _isObstacleCollided; }
         }
     }
 }

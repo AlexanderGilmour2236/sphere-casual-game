@@ -1,32 +1,27 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using tuesdayPizza;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace sphereGame
 {
     public class SphereNavigator : Navigator, IInputListener
     {
-        private const float MIN_THROW_SIZE = 1;
+        private const float DELAY_TO_FIRST_EXPLOSION = 0.25f;
 
         private readonly SGSceneAccessor _sceneAccessor;
         private readonly InputSystem _inputSystem;
-        private readonly SphereViewFactory _sphereViewFactory;
-
-        private bool _isTapDown;
-        private SphereData _currentSphereData;
-        private PlayerSphereView _currentPlayerSphereView;
-
-        private SphereNavigatorState _currentSphereNavigatorState;
-        private ThrowableView _currentThrowableView;
-        private float _currentThrowableScale = 0;
-        private float _currentSphereScale;
+        
+        private readonly SphereController _sphereController;
         private List<ObstacleView> _currentObstacles;
 
         public SphereNavigator(SGSceneAccessor sceneAccessor, Navigator parent) : base(parent)
         {
             _sceneAccessor = sceneAccessor;
-            _sphereViewFactory = sceneAccessor.sphereViewFactory;
+            _sphereController = new SphereController(_sceneAccessor.sphereViewFactory);
+            
             _inputSystem = sceneAccessor.inputSystem;
             _inputSystem.addInputListener(this);
         }
@@ -34,15 +29,12 @@ namespace sphereGame
         public override void go()
         {
             base.go();
-            setSphereNavigatorState(SphereNavigatorState.IDLE);
 
-            _currentSphereData = getNewSphereData();
-            _currentSphereScale = _currentSphereData.startScale;
-            _currentPlayerSphereView = _sphereViewFactory.getPlayerSphereView(_currentSphereData);
-            _currentPlayerSphereView.transform.position = _sceneAccessor.levelStartPoint.position;
-            updatePlayerSpherePosition();
             _currentObstacles = new List<ObstacleView>(_sceneAccessor.obstacleViews);
             initObstacles(_currentObstacles);
+            
+            _sphereController.init(getNewSphereData(), _sceneAccessor.levelStartPoint, _currentObstacles);
+            _sphereController.start();
         }
 
         private void initObstacles(List<ObstacleView> obstacleViews)
@@ -63,37 +55,6 @@ namespace sphereGame
             obstacleView.obstacleCollided -= onObstacleCollided;
         }
 
-        private void onObstacleCollided(ObstacleView obstacleView, ThrowableView throwableView)
-        {
-            throwableView.onHitObstacle();
-            applyThrowableToObstacle(throwableView, obstacleView);
-            obstacleView.setObstacleMarked(_currentPlayerSphereView.markMaterial);
-        }
-
-        private void applyThrowableToObstacle(ThrowableView throwableView, ObstacleView appliedObstacleView)
-        {
-            foreach (ObstacleView obstacle in _currentObstacles)
-            {
-                if (Vector3.Distance(obstacle.transform.position, appliedObstacleView.transform.position) <=
-                    throwableView.inflateComponent.currentTargetScale)
-                {
-                    appliedObstacleView.setObstacleMarked(_currentPlayerSphereView.markMaterial);
-                }
-            }
-            GameObject.Destroy(throwableView.gameObject);
-        }
-
-        private void setSphereNavigatorState(SphereNavigatorState state)
-        {
-            _currentSphereNavigatorState = state;
-            switch (state)
-            {
-                case SphereNavigatorState.SPHERE_RUN_OUT:
-                    onTapUp();
-                    break;
-            }
-        }
-
         private SphereData getNewSphereData()
         {
             return _sceneAccessor.defaultSphereData;
@@ -102,88 +63,80 @@ namespace sphereGame
         public override void tick()
         {
             base.tick();
-            switch (_currentSphereNavigatorState)
-            {
-                case SphereNavigatorState.IDLE:
-                    if (_isTapDown)
-                    {
-                        startInflatingThrowableSphere();
-                    }
-                    break;
-                case SphereNavigatorState.INFLATING_THROWABLE:
-                    if (_isTapDown || _currentThrowableScale < MIN_THROW_SIZE)
-                    {
-                        inflateThrowableSphere();
-                    }
-                    else
-                    {
-                        _currentThrowableView.throwObject();
-                        setSphereNavigatorState(SphereNavigatorState.IDLE);
-                    }
-                    break;
-                case SphereNavigatorState.SPHERE_RUN_OUT:
-                    if (!_currentThrowableView.isThrowed)
-                    {
-                        _currentThrowableView.throwObject();
-                    }
-                    break;
-            }
-
+            _sphereController.tick();
         }
 
-        private void startInflatingThrowableSphere()
+        private void addObstacleToExplosionQueue(ObstacleView obstacleView, float distanceToObstacle)
         {
-            _currentThrowableView = _sphereViewFactory.getThrowableSphereView();
-            _currentThrowableScale = 0;
-                        
-            _currentThrowableView.inflateComponent.setSize(_currentThrowableScale);
-            setSphereNavigatorState(SphereNavigatorState.INFLATING_THROWABLE);
+            _sceneAccessor.StartCoroutine(explodeObstacleRoutine(obstacleView, distanceToObstacle));
         }
 
-        private void inflateThrowableSphere()
+        private void onObstacleCollided(ObstacleView obstacleView, ThrowableView throwableView)
         {
-            float inflationInFrame = Time.deltaTime * _currentSphereData.inflateMultiplier;
-
-            _currentThrowableScale += inflationInFrame; 
-            _currentSphereScale -= inflationInFrame;
-                        
-            _currentPlayerSphereView.inflateComponent.addSize(-inflationInFrame);
-            _currentThrowableView.inflateComponent.addSize(inflationInFrame);
-
-            Vector3 playerSpherePosition = updatePlayerSpherePosition();
-
-            Vector3 throwablePosition = playerSpherePosition;
-            throwablePosition.z += _currentSphereScale * 0.5f + _currentThrowableScale * 0.5f;
-            _currentThrowableView.transform.position = throwablePosition;
-
-            if (_currentSphereScale <= 0)
+            if (!throwableView.isHitObstacle)
             {
-                setSphereNavigatorState(SphereNavigatorState.SPHERE_RUN_OUT);
+                applyThrowableToObstacle(throwableView, obstacleView);
+                obstacleView.setObstacleMarked(_sphereController.currentPlayerSphereView.markMaterial);
             }
         }
 
-        /// <summary>
-        /// updates player's sphere position related to collider size, so it's always on the ground, returns updated sphere position
-        /// </summary>
-        private Vector3 updatePlayerSpherePosition()
+        private IEnumerator explodeObstacleRoutine(ObstacleView obstacleView, float delay)
         {
-            Transform playerSphereTransform = _currentPlayerSphereView.transform;
-            Vector3 playerSpherePosition = playerSphereTransform.position;
-            playerSpherePosition.y = _sceneAccessor.levelStartPoint.transform.position.y + _currentSphereScale * 0.5f;
-            playerSphereTransform.position = playerSpherePosition;
-            return playerSpherePosition;
+            yield return new WaitForSeconds(delay);
+            ParticleSystem explosionPS = Object.Instantiate(_sceneAccessor.explosionParticle, obstacleView.transform.position, Quaternion.identity);
+            Object.Destroy(obstacleView.gameObject);
+            explosionPS.Play();
+            
+            // inflating bonus feature
+            //
+            // float playerSphereBonusInflation = 0.1f * _currentSphereScale;
+            // inflateSphere(playerSphereBonusInflation);
+
+            yield return new WaitForSeconds(explosionPS.main.duration);
+            Object.Destroy(explosionPS.gameObject);
+        }
+        
+        private void applyThrowableToObstacle(ThrowableView throwableView, ObstacleView appliedObstacleView)
+        {
+            throwableView.throwAtObstacle(appliedObstacleView.transform);
+            
+            addObstacleToExplosionQueue(appliedObstacleView, DELAY_TO_FIRST_EXPLOSION);
+            List<ObstacleView> collidedObstacles = new List<ObstacleView>(){ appliedObstacleView };
+            
+            foreach (ObstacleView obstacleView in _currentObstacles)
+            {
+                if (obstacleView == appliedObstacleView)
+                {
+                    continue;
+                }
+
+                float distanceToObstacle = Vector3.Distance(obstacleView.transform.position,
+                    appliedObstacleView.transform.position);
+                
+                if (distanceToObstacle <= throwableView.inflateComponent.currentTargetScale)
+                {
+                    collidedObstacles.Add(obstacleView);
+                    obstacleView.setObstacleMarked(_sphereController.currentPlayerSphereView.markMaterial);
+                    addObstacleToExplosionQueue(obstacleView, DELAY_TO_FIRST_EXPLOSION + distanceToObstacle * 0.25f);
+                }
+            }
+
+            foreach (ObstacleView obstacleView in collidedObstacles)
+            {
+                _currentObstacles.Remove(obstacleView);
+            }
+            
+            Object.Destroy(throwableView.gameObject, 5);
         }
 
         public void onTapDown()
         {
-            _isTapDown = true;
-
+            _sphereController.onTapDown();
         }
 
         public void onTapUp()
         {
-            _isTapDown = false;
+            _sphereController.onTapUp();
         }
-
     }
 }

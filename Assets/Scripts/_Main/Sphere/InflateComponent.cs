@@ -23,10 +23,13 @@ namespace sphereGame
             _currentTargetScale += addedSize;
         }
 
-        public void setSize(float scale)
+        public void setSize(float scale, bool instantly = false)
         {
             _currentTargetScale = scale;
-            _inflateTransform.localScale = getVectorFromFloat(_currentTargetScale);
+            if (instantly)
+            {
+                _inflateTransform.localScale = getVectorFromFloat(_currentTargetScale);
+            }
         }
 
         private Vector3 getVectorFromFloat(float scaleMagnitude)

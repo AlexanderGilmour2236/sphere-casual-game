@@ -11,6 +11,7 @@ namespace sphereGame
         [SerializeField] private Transform _levelStartPoint;
         [SerializeField] private SphereData _defaultSphereData;
         [SerializeField] private List<ObstacleView> _obstacleViews;
+        [SerializeField] private ParticleSystem _explosionParticle;
 
         public InputSystem inputSystem
         {
@@ -35,6 +36,11 @@ namespace sphereGame
         public List<ObstacleView> obstacleViews
         {
             get { return _obstacleViews; }
+        }
+
+        public ParticleSystem explosionParticle
+        {
+            get { return _explosionParticle; }
         }
     }
 }
