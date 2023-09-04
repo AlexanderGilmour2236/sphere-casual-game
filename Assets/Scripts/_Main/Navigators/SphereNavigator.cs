@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using mics.input;
+using sphereGame.camera;
 using sphereGame.obstacle;
 using tuesdayPizza;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace sphereGame.sphere
         
         private readonly SphereController _sphereController;
         private readonly ObstaclesController _obstaclesController;
+        private readonly CameraController _cameraController;
         
         private List<ObstacleView> _currentObstacles;
 
@@ -25,23 +27,23 @@ namespace sphereGame.sphere
             _sceneAccessor = sceneAccessor;
             _sphereController = new SphereController(_sceneAccessor.sphereViewFactory);
             _obstaclesController = new ObstaclesController();
-            
+            _cameraController = new CameraController(_sceneAccessor.camera, _sceneAccessor.cameraRelativeOffset);
             _inputSystem = sceneAccessor.inputSystem;
             _inputSystem.addInputListener(this);
 
+            subscribeSphereController();
             subscribeObstacleController();
         }
 
         public override void go()
         {
             base.go();
-
-            _currentObstacles = new List<ObstacleView>(_sceneAccessor.obstacleViews);
             
             _sphereController.init(getNewSphereData(), _sceneAccessor.levelStartPoint);
             _sphereController.start();
-            
-            _obstaclesController.spawnObstacles();
+            _cameraController.setTarget(_sphereController.currentPlayerSphereView.transform);
+            _cameraController.setOffsetScale(_sphereController.playerSphereScale);
+            _currentObstacles = _obstaclesController.spawnObstacles();
             _obstaclesController.setExplosionParticleSystem(_sceneAccessor.explosionView);
             _obstaclesController.setObstacleCollisionTag(SphereGameTags.THROWABLE_TAG);
         }
@@ -49,6 +51,22 @@ namespace sphereGame.sphere
         private void subscribeObstacleController()
         {
             _obstaclesController.obstacleCollide += onObstacleCollidedWithThrowable;
+        }
+
+        private void subscribeSphereController()
+        {
+            _sphereController.playerSphereSizeChange += onPlayerSphereSizeChange;
+            _sphereController.throwableRunOut += onThrowableRunOut;
+        }
+
+        private void onThrowableRunOut(ThrowableView throwableView)
+        {
+            _cameraController.setTarget(null);
+        }
+
+        private void onPlayerSphereSizeChange(float sphereSize)
+        {
+            _cameraController.setOffsetScale(sphereSize);
         }
 
         private void onObstacleCollidedWithThrowable(ObstacleView obstacleView, GameObject collidedObject)
@@ -103,6 +121,7 @@ namespace sphereGame.sphere
         {
             base.tick();
             _sphereController.tick();
+            _cameraController.tick();
         }
 
         public void onTapDown()

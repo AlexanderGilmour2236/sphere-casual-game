@@ -41,5 +41,15 @@ namespace sphereGame.sphere
         {
             get { return _currentTargetScale; }
         }
+        
+        public float currentScale
+        {
+            get { return _inflateTransform.localScale.magnitude; }
+        }
+
+        public Transform inflateTransform
+        {
+            get { return _inflateTransform; }
+        }
     }
 }

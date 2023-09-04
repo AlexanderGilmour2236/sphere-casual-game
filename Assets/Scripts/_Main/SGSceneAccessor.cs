@@ -9,12 +9,25 @@ namespace sphereGame
 {
     public class SGSceneAccessor : SceneAccessor
     {
+        [Header("Main")]
         [SerializeField] private InputSystem _inputSystem;
-        [SerializeField] private SphereViewFactory _sphereViewFactory;
         [SerializeField] private Transform _levelStartPoint;
+        
+        [Header("Sphere")]
+        [SerializeField] private SphereViewFactory _sphereViewFactory;
         [SerializeField] private SphereData _defaultSphereData;
-        [SerializeField] private List<ObstacleView> _obstacleViews;
+        
+        [Header("Obstacles")]
         [SerializeField] private ExplosionView _explosionView;
+        
+        [Header("Camera")]
+        [SerializeField] private Camera _camera;
+        [SerializeField] private Vector3 _cameraRelativeOffset;
+
+        public new Camera camera
+        {
+            get { return _camera; }
+        }
 
         public InputSystem inputSystem
         {
@@ -36,14 +49,14 @@ namespace sphereGame
             get { return _sphereViewFactory; }
         }
 
-        public List<ObstacleView> obstacleViews
-        {
-            get { return _obstacleViews; }
-        }
-
         public ExplosionView explosionView
         {
             get { return _explosionView; }
+        }
+
+        public Vector3 cameraRelativeOffset
+        {
+            get { return _cameraRelativeOffset; }
         }
     }
 }

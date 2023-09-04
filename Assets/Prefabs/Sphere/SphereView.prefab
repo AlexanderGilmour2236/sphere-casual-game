@@ -62,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _currentTargetScale: 11.5
   _inflateTransform: {fileID: 5751952833207571633}
-  _inflateLerpSpeed: 0.3
+  _inflateLerpSpeed: 0.1
 --- !u!1 &5751952833207571637
 GameObject:
   m_ObjectHideFlags: 0

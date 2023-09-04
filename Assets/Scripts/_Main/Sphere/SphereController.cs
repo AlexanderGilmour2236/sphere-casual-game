@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using misc;
 using UnityEngine;
@@ -8,7 +9,8 @@ namespace sphereGame.sphere
     public class SphereController
     {
         private const float MIN_THROW_SIZE = 1;
-        
+        private const float DELAY_TO_DESTROY_THROWABLE = 1.0f;
+
         private SphereViewFactory _sphereViewFactory;
 
         private bool _isTapDown;
@@ -23,6 +25,9 @@ namespace sphereGame.sphere
         private Transform _levelStartPoint;
         private MonoPool<ThrowableView> _throwableViewsPool;
         private Dictionary<ThrowableView, Coroutine> _throwableToAutoDestroyCoroutines = new Dictionary<ThrowableView, Coroutine>();
+
+        public event Action<ThrowableView> throwableRunOut;
+        public event Action<float> playerSphereSizeChange;
         
         public SphereController(SphereViewFactory sphereViewFactory)
         {
@@ -44,7 +49,7 @@ namespace sphereGame.sphere
         public void start()
         {
             _currentSphereControllerState = SphereControllerState.IDLE;
-            updatePlayerSpherePosition();            
+            updatePlayerSphereYPosition();            
         }
 
         public void tick()
@@ -58,12 +63,19 @@ namespace sphereGame.sphere
                     }
                     break;
                 case SphereControllerState.INFLATING_THROWABLE:
-                    if (_isTapDown || _currentThrowableScale < MIN_THROW_SIZE)
+                    if (_isTapDown)
                     {
                         chargeShot();
                     }
                     else
                     {
+                        if (_currentThrowableScale < MIN_THROW_SIZE)
+                        {
+                            float difference = MIN_THROW_SIZE - _currentThrowableScale;
+                            _currentThrowableScale = Mathf.Clamp(_currentThrowableScale, MIN_THROW_SIZE, _currentThrowableScale);
+                            _currentThrowableView.inflateComponent.setSize(_currentThrowableScale);
+                            inflatePlayerSphere(-difference);
+                        }
                         throwSphere();
                         setSphereControllerState(SphereControllerState.IDLE);
                     }
@@ -71,17 +83,42 @@ namespace sphereGame.sphere
                 case SphereControllerState.SPHERE_RUN_OUT:
                     if (!_currentThrowableView.isThrown)
                     {
+                        throwableRunOut?.Invoke(_currentThrowableView);
                         throwSphere();
                     }
                     break;
             }
+
+            checkCanSphereMove();
         }
+
+        private void checkCanSphereMove()
+        {
+            Vector3 playerSpherePosition = _currentPlayerSphereView.transform.position;
+            
+            RaycastHit raycastHit;
+            if(Physics.CapsuleCast(playerSpherePosition, playerSpherePosition, 
+                _playerSphereScale, Vector3.forward, out raycastHit, 
+                1 << LayerMask.NameToLayer(SphereGameTags.OBSTACLE_LAYER)))
+            {
+                float distanceToPlayerSphere = Vector3.Distance(playerSpherePosition, raycastHit.point);
+                if (distanceToPlayerSphere >= _playerSphereScale * 2)
+                {
+                    _currentPlayerSphereView.transform.Translate(Vector3.forward * Time.deltaTime * 3);
+                }
+            }
+            else
+            {
+                _currentPlayerSphereView.transform.Translate(Vector3.forward * Time.deltaTime * 3);
+            }
+        }
+
 
         private void throwSphere()
         {
+            _currentPlayerSphereView.playThrowEffect();
             _currentThrowableView.transform.position =
                 getScaleRelatedPositionOnLevel(_currentThrowableView.transform.position, _currentThrowableScale);
-            updatePlayerSpherePosition();
 
             _currentThrowableView.throwForward();
         }
@@ -104,7 +141,7 @@ namespace sphereGame.sphere
             inflatePlayerSphere(-scaleInflationInFrame);
             _currentThrowableView.inflateComponent.addSize(scaleInflationInFrame);
 
-            Vector3 playerSpherePosition = updatePlayerSpherePosition();
+            Vector3 playerSpherePosition = updatePlayerSphereYPosition();
 
             float forwardOffset = _playerSphereScale * 0.5f + _currentThrowableScale * 0.5f + _playerSphereScale * 0.5f;
             Vector3 throwablePosition = playerSpherePosition;
@@ -135,10 +172,12 @@ namespace sphereGame.sphere
         // <summary>
         /// updates player's sphere position related to collider size, so it's always on the ground, returns updated sphere position
         /// </summary>
-        private Vector3 updatePlayerSpherePosition()
+        private Vector3 updatePlayerSphereYPosition()
         {
+         Debug.Log(_currentPlayerSphereView.inflateComponent.currentScale);
             Transform playerSphereTransform = _currentPlayerSphereView.transform;
-            Vector3 playerSpherePosition = getScaleRelatedPositionOnLevel(playerSphereTransform.position, _playerSphereScale);
+            Vector3 playerSpherePosition = getScaleRelatedPositionOnLevel(playerSphereTransform.position, 
+                _currentPlayerSphereView.inflateComponent.currentScale * 0.5f);
             playerSphereTransform.position = playerSpherePosition;
             return playerSpherePosition;
         }
@@ -155,13 +194,14 @@ namespace sphereGame.sphere
             _playerSphereScale += inflation;
             _playerSphereScale = Mathf.Clamp(_playerSphereScale, 0, _currentSphereData.startScale);
             _currentPlayerSphereView.inflateComponent.setSize(_playerSphereScale);
-            updatePlayerSpherePosition();
+            updatePlayerSphereYPosition();
+            playerSphereSizeChange?.Invoke(_playerSphereScale);
         }
 
         public void autoDestroyThrowable(ThrowableView throwableView)
         {
             _throwableToAutoDestroyCoroutines.Add(throwableView,
-                CoroutineRunner.instance.startCoroutine(returnThrowableToPool(throwableView, 3.0f)));
+                CoroutineRunner.instance.startCoroutine(returnThrowableToPool(throwableView, DELAY_TO_DESTROY_THROWABLE)));
         }
 
         private IEnumerator returnThrowableToPool(ThrowableView throwableView, float delay)
@@ -190,11 +230,6 @@ namespace sphereGame.sphere
             _currentSphereControllerState = SphereControllerState.NONE;
         }
 
-        public PlayerSphereView currentPlayerSphereView
-        {
-            get { return _currentPlayerSphereView; }
-        }
-
         public void onTapDown()
         {
             _isTapDown = true;
@@ -203,6 +238,16 @@ namespace sphereGame.sphere
         public void onTapUp()
         {
             _isTapDown = false;
+        }
+
+        public PlayerSphereView currentPlayerSphereView
+        {
+            get { return _currentPlayerSphereView; }
+        }
+
+        public float playerSphereScale
+        {
+            get { return _playerSphereScale; }
         }
     }
 }
