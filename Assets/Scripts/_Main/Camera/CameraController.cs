@@ -10,7 +10,7 @@ namespace sphereGame.camera
         private readonly Vector3 _relativeOffset;
         private Transform _target;
         private float _offsetScale;
-        private float _minOffsetScale = 5;
+        private float _minOffsetScale = 3;
         private float _minYPosition = 3;
         
         public CameraController(Camera camera, Vector3 relativeOffset)

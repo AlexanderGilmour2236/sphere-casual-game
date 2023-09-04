@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace sphereGame.sphere
 {
@@ -6,7 +8,7 @@ namespace sphereGame.sphere
     {
         [SerializeField] private InflateComponent _inflateComponent;
         [SerializeField] private Material _markMaterial;
-
+        
         public void playThrowEffect()
         {
             Vector3 localScale = _inflateComponent.inflateTransform.localScale;
@@ -14,7 +16,7 @@ namespace sphereGame.sphere
             localScale.x *= Random.Range(0.7f, 0.9f);
             _inflateComponent.inflateTransform.localScale = localScale;
         }
-        
+
         public InflateComponent inflateComponent
         {
             get { return _inflateComponent; }

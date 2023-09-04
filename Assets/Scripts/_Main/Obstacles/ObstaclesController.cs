@@ -70,8 +70,12 @@ namespace sphereGame.obstacle
         
         public void addObstacleToExplosionSequence(ObstacleView obstacleView, float distanceToObstacle)
         {
-            _explosionCoroutines.Add(obstacleView, 
-                CoroutineRunner.instance.startCoroutine(explodeObstacleRoutine(obstacleView, distanceToObstacle)));
+            if (!_explosionCoroutines.ContainsKey(obstacleView))
+            {
+                _explosionCoroutines.Add(obstacleView, 
+                    CoroutineRunner.instance.startCoroutine(explodeObstacleRoutine(obstacleView, distanceToObstacle)));
+            }
+
         }
         
         private IEnumerator explodeObstacleRoutine(ObstacleView obstacleView, float delay)

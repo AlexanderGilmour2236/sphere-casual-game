@@ -10,6 +10,7 @@ namespace sphereGame.sphere
     {
         private const float MIN_THROW_SIZE = 1;
         private const float DELAY_TO_DESTROY_THROWABLE = 1.0f;
+        private const float MOVE_RAYCAST_DISTANCE = 50.0f;
 
         private SphereViewFactory _sphereViewFactory;
 
@@ -95,22 +96,32 @@ namespace sphereGame.sphere
         private void checkCanSphereMove()
         {
             Vector3 playerSpherePosition = _currentPlayerSphereView.transform.position;
-            
+            float capsuleRadius = _playerSphereScale * 0.5f;
+
+            Vector3 capsuleCastStart = playerSpherePosition;
+            Vector3 capsuleCastEnd = playerSpherePosition ;
+
             RaycastHit raycastHit;
-            if(Physics.CapsuleCast(playerSpherePosition, playerSpherePosition, 
-                _playerSphereScale, Vector3.forward, out raycastHit, 
+            if (Physics.CapsuleCast(capsuleCastStart, capsuleCastEnd, capsuleRadius, 
+                Vector3.forward, out raycastHit, MOVE_RAYCAST_DISTANCE, 
                 1 << LayerMask.NameToLayer(SphereGameTags.OBSTACLE_LAYER)))
             {
-                float distanceToPlayerSphere = Vector3.Distance(playerSpherePosition, raycastHit.point);
-                if (distanceToPlayerSphere >= _playerSphereScale * 2)
+                float distanceToObstacle = raycastHit.distance;
+                if (distanceToObstacle >= _playerSphereScale * 2)
                 {
-                    _currentPlayerSphereView.transform.Translate(Vector3.forward * Time.deltaTime * 3);
+                    moveSphere(_currentSphereData.movementSpeed);
                 }
             }
             else
             {
-                _currentPlayerSphereView.transform.Translate(Vector3.forward * Time.deltaTime * 3);
+                moveSphere(_currentSphereData.movementSpeed);
             }
+        }
+        
+
+        private void moveSphere(float movementSpeed)
+        {
+            _currentPlayerSphereView.transform.Translate(Vector3.forward * Time.deltaTime * movementSpeed);
         }
 
 

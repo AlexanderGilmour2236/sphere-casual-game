@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using mics.input;
 using sphereGame.camera;
+using sphereGame.level;
 using sphereGame.obstacle;
 using tuesdayPizza;
 using UnityEngine;
@@ -21,6 +22,7 @@ namespace sphereGame.sphere
         private readonly CameraController _cameraController;
         
         private List<ObstacleView> _currentObstacles;
+        private LevelController _levelController;
 
         public SphereNavigator(SGSceneAccessor sceneAccessor, Navigator parent) : base(parent)
         {
@@ -28,10 +30,13 @@ namespace sphereGame.sphere
             _sphereController = new SphereController(_sceneAccessor.sphereViewFactory);
             _obstaclesController = new ObstaclesController();
             _cameraController = new CameraController(_sceneAccessor.camera, _sceneAccessor.cameraRelativeOffset);
+            _levelController = new LevelController();
+                
             _inputSystem = sceneAccessor.inputSystem;
             _inputSystem.addInputListener(this);
 
             subscribeSphereController();
+            subscribeLevelController();
             subscribeObstacleController();
         }
 
@@ -39,13 +44,20 @@ namespace sphereGame.sphere
         {
             base.go();
             
+            _levelController.loadLevel();
             _sphereController.init(getNewSphereData(), _sceneAccessor.levelStartPoint);
             _sphereController.start();
+            
             _cameraController.setTarget(_sphereController.currentPlayerSphereView.transform);
             _cameraController.setOffsetScale(_sphereController.playerSphereScale);
+            
             _currentObstacles = _obstaclesController.spawnObstacles();
+            
             _obstaclesController.setExplosionParticleSystem(_sceneAccessor.explosionView);
             _obstaclesController.setObstacleCollisionTag(SphereGameTags.THROWABLE_TAG);
+            
+            _levelController.changeDoorSize(_sphereController.playerSphereScale);
+            _levelController.setPlayerTransform(_sphereController.currentPlayerSphereView.transform);
         }
 
         private void subscribeObstacleController()
@@ -59,6 +71,16 @@ namespace sphereGame.sphere
             _sphereController.throwableRunOut += onThrowableRunOut;
         }
 
+        private void subscribeLevelController()
+        {
+            _levelController.playerReachedDoorPosition += onPlayerReachedFinish;
+        }
+
+        private void onPlayerReachedFinish()
+        {
+            Debug.Log("YOU WIN!!!");
+        }
+
         private void onThrowableRunOut(ThrowableView throwableView)
         {
             _cameraController.setTarget(null);
@@ -67,6 +89,7 @@ namespace sphereGame.sphere
         private void onPlayerSphereSizeChange(float sphereSize)
         {
             _cameraController.setOffsetScale(sphereSize);
+            _levelController.changeDoorSize(sphereSize);
         }
 
         private void onObstacleCollidedWithThrowable(ObstacleView obstacleView, GameObject collidedObject)
@@ -122,6 +145,7 @@ namespace sphereGame.sphere
             base.tick();
             _sphereController.tick();
             _cameraController.tick();
+            _levelController.tick();
         }
 
         public void onTapDown()
