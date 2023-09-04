@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace sphereGame
+namespace sphereGame.sphere
 {
     public class SphereViewFactory : MonoBehaviour
     {
@@ -16,8 +16,8 @@ namespace sphereGame
 
         public ThrowableView getThrowableSphereView()
         {
-            ThrowableView view = Instantiate(_throwableViewPrefab);
-            return view;
+            ThrowableView throwableView = Instantiate(_throwableViewPrefab);
+            return throwableView;
         }
     }
 }

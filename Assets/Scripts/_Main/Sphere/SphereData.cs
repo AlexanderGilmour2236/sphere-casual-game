@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace sphereGame
+namespace sphereGame.sphere
 {
     [Serializable]
     public class SphereData

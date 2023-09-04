@@ -1,30 +1,31 @@
 ﻿using System;
+using misc;
 using UnityEngine;
 
-namespace sphereGame
+namespace sphereGame.sphere
 {
-    public class ThrowableView : MonoBehaviour
+    public class ThrowableView : MonoBehaviour, IPoolObject
     {
         [SerializeField] private InflateComponent _inflateComponent;
         [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private float _sphereSpeed;
         [SerializeField] private float _maxVelocity = 1;
 
-        private bool _isThrowed;
+        private bool _isThrown;
         private bool _isHitObstacle;
 
         private void FixedUpdate()
         {
-            if (_isThrowed && !_isHitObstacle)
+            if (_isThrown && !_isHitObstacle)
             {
                 _rigidbody.AddForce(Vector3.forward * _sphereSpeed, ForceMode.VelocityChange);
                 _rigidbody.velocity = Vector3.ClampMagnitude(_rigidbody.velocity, _maxVelocity);
             }
         }
 
-        public void throwObject()
+        public void throwForward()
         {
-            _isThrowed = true;
+            _isThrown = true;
         }
 
         public void throwAtObstacle(Transform obstacleTransform)
@@ -37,19 +38,42 @@ namespace sphereGame
             _rigidbody.AddForce(forceToObstacle, ForceMode.VelocityChange);
         }
 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!_isHitObstacle && other.CompareTag(SphereGameTags.OBSTACLE_TAG))
+            {
+                ThrowableView throwableView = other.GetComponentInParent<ThrowableView>();
+                if (!throwableView.isHitObstacle)
+                {
+                    _isHitObstacle = true;
+                }
+            }
+        }
+
         public InflateComponent inflateComponent
         {
             get { return _inflateComponent; }
         }
 
-        public bool isThrowed
+        public bool isThrown
         {
-            get { return _isThrowed; }
+            get { return _isThrown; }
         }
 
         public bool isHitObstacle
         {
             get { return _isHitObstacle; }
+        }
+
+        public void onSpawn()
+        {
+        }
+
+        public void onRelease()
+        {
+            _rigidbody.velocity = Vector3.zero;
+            _isThrown = false;
+            _isHitObstacle = false;
         }
     }
 }

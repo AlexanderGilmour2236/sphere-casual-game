@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace sphereGame
+namespace sphereGame.sphere
 {
     public class InflateComponent : MonoBehaviour
     {

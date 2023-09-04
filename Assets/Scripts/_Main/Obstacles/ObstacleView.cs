@@ -3,16 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace sphereGame
+namespace sphereGame.obstacle
 {
     public class ObstacleView : MonoBehaviour
     {
         [SerializeField] private List<MeshRenderer> _meshRenderers;
 
         private bool _isObstacleCollided = false;
+        private string _collisionTag = "Untagged";
 
-        public event Action<ObstacleView, ThrowableView> obstacleCollided;
+        public event Action<ObstacleView, GameObject> obstacleCollided;
 
+        public void setCollisionTag(string collisionTag)
+        {
+            _collisionTag = collisionTag;
+        }
+        
         public void setObstacleMarked(Material markMaterial)
         {
             foreach (MeshRenderer meshRenderer in _meshRenderers)
@@ -29,20 +35,16 @@ namespace sphereGame
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!_isObstacleCollided && other.CompareTag(SphereGameTags.THROWABLE_TAG))
+            if (!_isObstacleCollided && other.CompareTag(_collisionTag))
             {
-                ThrowableView throwableView = other.GetComponentInParent<ThrowableView>();
-                if (!throwableView.isHitObstacle)
-                {
-                    _isObstacleCollided = true;
-                    obstacleCollided?.Invoke(this, throwableView);
-                }
+                obstacleCollided?.Invoke(this, other.gameObject);
             }
         }
         
         public bool isObstacleCollided
         {
             get { return _isObstacleCollided; }
+            set { _isObstacleCollided = value; }
         }
     }
 }

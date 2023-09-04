@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using mics.input;
+using sphereGame.obstacle;
+using sphereGame.sphere;
 using tuesdayPizza;
 using UnityEngine;
 
@@ -11,7 +14,7 @@ namespace sphereGame
         [SerializeField] private Transform _levelStartPoint;
         [SerializeField] private SphereData _defaultSphereData;
         [SerializeField] private List<ObstacleView> _obstacleViews;
-        [SerializeField] private ParticleSystem _explosionParticle;
+        [SerializeField] private ExplosionView _explosionView;
 
         public InputSystem inputSystem
         {
@@ -38,9 +41,9 @@ namespace sphereGame
             get { return _obstacleViews; }
         }
 
-        public ParticleSystem explosionParticle
+        public ExplosionView explosionView
         {
-            get { return _explosionParticle; }
+            get { return _explosionView; }
         }
     }
 }

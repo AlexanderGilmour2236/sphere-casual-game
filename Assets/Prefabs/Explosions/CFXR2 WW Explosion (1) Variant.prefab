@@ -135,7 +135,7 @@ PrefabInstance:
     - target: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50,
         type: 3}
       propertyPath: m_Name
-      value: CFXR2 WW Explosion (1)
+      value: CFXR2 WW Explosion (1) Variant
       objectReference: {fileID: 0}
     - target: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50,
         type: 3}
@@ -250,3 +250,28 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
+--- !u!1 &2946914584151972096 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50,
+    type: 3}
+  m_PrefabInstance: {fileID: 1683167340988973240}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3647990268446290778
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2946914584151972096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07d9909a8e904b0b930c13ad0c1b616b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _explosionParticleSystem: {fileID: 2946914584151972110}
+--- !u!198 &2946914584151972110 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 4593184484909914550, guid: 2e1e9506f5904a64b81744324fb7cd50,
+    type: 3}
+  m_PrefabInstance: {fileID: 1683167340988973240}
+  m_PrefabAsset: {fileID: 0}

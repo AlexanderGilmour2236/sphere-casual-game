@@ -1,4 +1,5 @@
-﻿using tuesdayPizza;
+﻿using sphereGame.sphere;
+using tuesdayPizza;
 
 namespace sphereGame
 {

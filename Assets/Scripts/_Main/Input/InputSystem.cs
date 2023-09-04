@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace sphereGame
+namespace mics.input
 {
     public class InputSystem : MonoBehaviour
     {

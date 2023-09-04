@@ -1,4 +1,4 @@
-﻿namespace sphereGame
+﻿namespace mics.input
 {
     public interface IInputListener
     {

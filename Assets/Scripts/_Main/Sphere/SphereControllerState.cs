@@ -1,4 +1,4 @@
-﻿namespace sphereGame
+﻿namespace sphereGame.sphere
 {
     public enum SphereControllerState
     {

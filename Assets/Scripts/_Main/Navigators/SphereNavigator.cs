@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using mics.input;
+using sphereGame.obstacle;
 using tuesdayPizza;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace sphereGame
+namespace sphereGame.sphere
 {
     public class SphereNavigator : Navigator, IInputListener
     {
@@ -15,15 +16,20 @@ namespace sphereGame
         private readonly InputSystem _inputSystem;
         
         private readonly SphereController _sphereController;
+        private readonly ObstaclesController _obstaclesController;
+        
         private List<ObstacleView> _currentObstacles;
 
         public SphereNavigator(SGSceneAccessor sceneAccessor, Navigator parent) : base(parent)
         {
             _sceneAccessor = sceneAccessor;
             _sphereController = new SphereController(_sceneAccessor.sphereViewFactory);
+            _obstaclesController = new ObstaclesController();
             
             _inputSystem = sceneAccessor.inputSystem;
             _inputSystem.addInputListener(this);
+
+            subscribeObstacleController();
         }
 
         public override void go()
@@ -31,76 +37,36 @@ namespace sphereGame
             base.go();
 
             _currentObstacles = new List<ObstacleView>(_sceneAccessor.obstacleViews);
-            initObstacles(_currentObstacles);
             
-            _sphereController.init(getNewSphereData(), _sceneAccessor.levelStartPoint, _currentObstacles);
+            _sphereController.init(getNewSphereData(), _sceneAccessor.levelStartPoint);
             _sphereController.start();
+            
+            _obstaclesController.spawnObstacles();
+            _obstaclesController.setExplosionParticleSystem(_sceneAccessor.explosionView);
+            _obstaclesController.setObstacleCollisionTag(SphereGameTags.THROWABLE_TAG);
         }
 
-        private void initObstacles(List<ObstacleView> obstacleViews)
+        private void subscribeObstacleController()
         {
-            foreach (ObstacleView obstacleView in obstacleViews)
+            _obstaclesController.obstacleCollide += onObstacleCollidedWithThrowable;
+        }
+
+        private void onObstacleCollidedWithThrowable(ObstacleView obstacleView, GameObject collidedObject)
+        {
+            ThrowableView throwableView = collidedObject.GetComponentInParent<ThrowableView>();
+            if (throwableView != null && !throwableView.isHitObstacle)
             {
-                subscribeObstacleView(obstacleView);
-            }
-        }
-
-        private void subscribeObstacleView(ObstacleView obstacleView)
-        {
-            obstacleView.obstacleCollided += onObstacleCollided;
-        }
-        
-        private void unsubscribeObstacleView(ObstacleView obstacleView)
-        {
-            obstacleView.obstacleCollided -= onObstacleCollided;
-        }
-
-        private SphereData getNewSphereData()
-        {
-            return _sceneAccessor.defaultSphereData;
-        }
-
-        public override void tick()
-        {
-            base.tick();
-            _sphereController.tick();
-        }
-
-        private void addObstacleToExplosionQueue(ObstacleView obstacleView, float distanceToObstacle)
-        {
-            _sceneAccessor.StartCoroutine(explodeObstacleRoutine(obstacleView, distanceToObstacle));
-        }
-
-        private void onObstacleCollided(ObstacleView obstacleView, ThrowableView throwableView)
-        {
-            if (!throwableView.isHitObstacle)
-            {
+                obstacleView.isObstacleCollided = true;
+                throwableView.throwAtObstacle(obstacleView.transform);
                 applyThrowableToObstacle(throwableView, obstacleView);
                 obstacleView.setObstacleMarked(_sphereController.currentPlayerSphereView.markMaterial);
             }
         }
 
-        private IEnumerator explodeObstacleRoutine(ObstacleView obstacleView, float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            ParticleSystem explosionPS = Object.Instantiate(_sceneAccessor.explosionParticle, obstacleView.transform.position, Quaternion.identity);
-            Object.Destroy(obstacleView.gameObject);
-            explosionPS.Play();
-            
-            // inflating bonus feature
-            //
-            // float playerSphereBonusInflation = 0.1f * _currentSphereScale;
-            // inflateSphere(playerSphereBonusInflation);
-
-            yield return new WaitForSeconds(explosionPS.main.duration);
-            Object.Destroy(explosionPS.gameObject);
-        }
-        
         private void applyThrowableToObstacle(ThrowableView throwableView, ObstacleView appliedObstacleView)
         {
-            throwableView.throwAtObstacle(appliedObstacleView.transform);
-            
-            addObstacleToExplosionQueue(appliedObstacleView, DELAY_TO_FIRST_EXPLOSION);
+            _sphereController.autoDestroyThrowable(throwableView);
+            _obstaclesController.addObstacleToExplosionSequence(appliedObstacleView, DELAY_TO_FIRST_EXPLOSION);
             List<ObstacleView> collidedObstacles = new List<ObstacleView>(){ appliedObstacleView };
             
             foreach (ObstacleView obstacleView in _currentObstacles)
@@ -117,7 +83,7 @@ namespace sphereGame
                 {
                     collidedObstacles.Add(obstacleView);
                     obstacleView.setObstacleMarked(_sphereController.currentPlayerSphereView.markMaterial);
-                    addObstacleToExplosionQueue(obstacleView, DELAY_TO_FIRST_EXPLOSION + distanceToObstacle * 0.25f);
+                    _obstaclesController.addObstacleToExplosionSequence(obstacleView, DELAY_TO_FIRST_EXPLOSION + distanceToObstacle * 0.25f);
                 }
             }
 
@@ -125,8 +91,18 @@ namespace sphereGame
             {
                 _currentObstacles.Remove(obstacleView);
             }
-            
-            Object.Destroy(throwableView.gameObject, 5);
+
+        }
+
+        private SphereData getNewSphereData()
+        {
+            return _sceneAccessor.defaultSphereData;
+        }
+
+        public override void tick()
+        {
+            base.tick();
+            _sphereController.tick();
         }
 
         public void onTapDown()
