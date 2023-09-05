@@ -8,9 +8,10 @@ namespace sphereGame.UI
     {
         [SerializeField] private CanvasGroup _faderCanvasGroup;
         [SerializeField] private float _fadeInDuration;
-        
+        [SerializeField] private float _gameOverDuration;
+
         private Tween _faderTween;
-        
+
         public Tween fadeIn(Action onComplete)
         {
             killFadeTween();
@@ -34,5 +35,9 @@ namespace sphereGame.UI
             }
         }
 
+        public float gameOverDuration
+        {
+            get { return _gameOverDuration; }
+        }
     }
 }

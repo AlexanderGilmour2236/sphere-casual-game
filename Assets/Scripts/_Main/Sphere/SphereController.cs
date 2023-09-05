@@ -9,6 +9,7 @@ namespace sphereGame.sphere
 {
     public class SphereController
     {
+        private const float MIN_PLAYER_SPHERE_SIZE = 0.5f;
         private const float MIN_THROW_SIZE = 1;
         private const float DELAY_TO_DESTROY_THROWABLE = 1.0f;
         private const float MOVE_RAYCAST_DISTANCE = 50.0f;
@@ -63,11 +64,15 @@ namespace sphereGame.sphere
                     {
                         startInflatingThrowableSphere();
                     }
+                    checkCanSphereMove();
+                    updatePlayerSphereYPosition();
                     break;
                 case SphereControllerState.INFLATING_THROWABLE:
                     if (_isTapDown)
                     {
                         chargeShot();
+                        checkCanSphereMove();
+                        checkSphereRunOut();
                     }
                     else
                     {
@@ -76,23 +81,30 @@ namespace sphereGame.sphere
                             float difference = MIN_THROW_SIZE - _currentThrowableScale;
                             _currentThrowableScale = Mathf.Clamp(_currentThrowableScale, MIN_THROW_SIZE, _currentThrowableScale);
                             _currentThrowableView.inflateComponent.setSize(_currentThrowableScale);
+                            
                             inflatePlayerSphere(-difference);
                         }
-                        throwSphere();
+
                         setSphereControllerState(SphereControllerState.IDLE);
+                        throwSphere();
                     }
                     break;
                 case SphereControllerState.SPHERE_RUN_OUT:
                     if (!_currentThrowableView.isThrown)
                     {
-                        throwableRunOut?.Invoke(_currentThrowableView);
                         throwSphere();
-                        setSphereControllerState(SphereControllerState.NONE);
                     }
+                    throwableRunOut?.Invoke(_currentThrowableView);
                     break;
             }
+        }
 
-            checkCanSphereMove();
+        private void checkSphereRunOut()
+        {
+            if (_playerSphereScale < MIN_PLAYER_SPHERE_SIZE)
+            {
+                setSphereControllerState(SphereControllerState.SPHERE_RUN_OUT);
+            }
         }
 
         private void checkCanSphereMove()
@@ -130,10 +142,14 @@ namespace sphereGame.sphere
         private void throwSphere()
         {
             _currentPlayerSphereView.playThrowEffect();
+            updatePlayerSphereYPosition();
             _currentThrowableView.transform.position =
                 getScaleRelatedPositionOnLevel(_currentThrowableView.transform.position, _currentThrowableScale);
 
             _currentThrowableView.throwForward();
+            setSphereControllerState(SphereControllerState.IDLE);
+            
+            checkSphereRunOut();
         }
 
         private void startInflatingThrowableSphere()
@@ -151,9 +167,10 @@ namespace sphereGame.sphere
 
             _currentThrowableScale += scaleInflationInFrame;
             
-            inflatePlayerSphere(-scaleInflationInFrame);
             _currentThrowableView.inflateComponent.addSize(scaleInflationInFrame);
-
+            
+            inflatePlayerSphere(-scaleInflationInFrame);
+            
             Vector3 playerSpherePosition = updatePlayerSphereYPosition();
 
             float forwardOffset = _playerSphereScale * 0.5f + _currentThrowableScale * 0.5f + _playerSphereScale * 0.5f;
@@ -165,6 +182,7 @@ namespace sphereGame.sphere
             throwableTransform.position =
                 getScaleRelatedPositionOnLevel(throwablePosition, _currentThrowableScale);
             
+
             if (_playerSphereScale <= 0)
             {
                 setSphereControllerState(SphereControllerState.SPHERE_RUN_OUT);
@@ -187,11 +205,14 @@ namespace sphereGame.sphere
         /// </summary>
         private Vector3 updatePlayerSphereYPosition()
         {
-         Debug.Log(_currentPlayerSphereView.inflateComponent.currentScale);
+            Debug.Log(_currentPlayerSphereView.inflateComponent.currentScale);
+            float playerSphereCurrentScale = _currentPlayerSphereView.inflateComponent.currentScale;
+            
             Transform playerSphereTransform = _currentPlayerSphereView.transform;
             Vector3 playerSpherePosition = getScaleRelatedPositionOnLevel(playerSphereTransform.position, 
-                _currentPlayerSphereView.inflateComponent.currentScale * 0.5f);
+                playerSphereCurrentScale * 0.5f);
             playerSphereTransform.position = playerSpherePosition;
+            
             return playerSpherePosition;
         }
 
@@ -204,7 +225,16 @@ namespace sphereGame.sphere
 
         private void inflatePlayerSphere(float inflation)
         {
-            _playerSphereScale += inflation;
+            if (!Mathf.Approximately(_playerSphereScale, MIN_PLAYER_SPHERE_SIZE) && _playerSphereScale + inflation < MIN_PLAYER_SPHERE_SIZE)
+            {
+                _playerSphereScale = MIN_PLAYER_SPHERE_SIZE;
+                throwSphere();
+                onTapUp();
+            }
+            else
+            {
+                _playerSphereScale += inflation;
+            }
             _playerSphereScale = Mathf.Clamp(_playerSphereScale, 0, _currentSphereData.startScale);
             _currentPlayerSphereView.inflateComponent.setSize(_playerSphereScale);
             updatePlayerSphereYPosition();

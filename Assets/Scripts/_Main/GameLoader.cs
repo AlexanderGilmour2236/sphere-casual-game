@@ -11,6 +11,7 @@ namespace sphereGame
 
         public void Start()
         {
+            Application.targetFrameRate = 60;
             _sgApp = new SGApp(new SGGameNavigator(_sgSceneAccessor, null), new SGServicesLoader());
             _sgApp.start();
         }

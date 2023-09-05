@@ -31,7 +31,7 @@ namespace sphereGame.sphere
         public void throwAtObstacle(Transform obstacleTransform)
         {
             _isHitObstacle = true;
-            Vector3 forceToObstacle = Vector3.down * _rigidbody.velocity.magnitude;
+            Vector3 forceToObstacle = Vector3.down * _rigidbody.velocity.magnitude * 0.5f;
             Vector3 direction = obstacleTransform.position - transform.position;
             forceToObstacle += direction * _sphereSpeed;
 

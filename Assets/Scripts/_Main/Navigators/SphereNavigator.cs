@@ -14,14 +14,16 @@ namespace sphereGame.sphere
     public class SphereNavigator : Navigator, IInputListener
     {
         private const float DELAY_TO_FIRST_EXPLOSION = 0.25f;
+        private const string WIN_GAME_OVER_TEXT = "GREAT!";
+        private const string LOSE_GAME_OVER_TEXT = "TRY AGAIN";
 
         private readonly SGSceneAccessor _sceneAccessor;
         private readonly InputSystem _inputSystem;
-        
+
         private readonly SphereController _sphereController;
         private readonly ObstaclesController _obstaclesController;
         private readonly CameraController _cameraController;
-        
+
         private List<ObstacleView> _currentObstacles;
         private LevelController _levelController;
         private GameHUD _gameHUD;
@@ -30,6 +32,7 @@ namespace sphereGame.sphere
         private int _currentLevelIndex;
         private LevelPatternData _currentLevelPattern;
         private LevelPatternView _currentLevelPatternView;
+
 
         public SphereNavigator(SGSceneAccessor sceneAccessor, Navigator parent) : base(parent)
         {
@@ -106,7 +109,6 @@ namespace sphereGame.sphere
             _isGameOver = false;
             
             startCurrentLevel();
-            Debug.Log("START NEW LEVEL!!!");
         }
 
         private void onThrowableRunOut(ThrowableView throwableView)
@@ -119,19 +121,22 @@ namespace sphereGame.sphere
             if (!_isGameOver)
             {
                 _isGameOver = true;
+                string gameOverText;
+                
                 if (isWin)
                 {
+                    gameOverText = WIN_GAME_OVER_TEXT;
                     _currentLevelIndex++;
-                    _gameHUD.playGameOverSequence(startNewLevel, () => _isGameOver = false);
-                    Debug.Log("YOU WIN!!!");
-
                 }
                 else
                 {
+                    gameOverText = LOSE_GAME_OVER_TEXT;
                     _cameraController.setTarget(null);
-                    _gameHUD.playGameOverSequence(startNewLevel, () => _isGameOver = false);
-                    Debug.Log("YOU LOSE!!!");
                 }
+                
+                _gameHUD.setGameOverText(gameOverText);
+                _gameHUD.playGameOverSequence(startNewLevel, () => _isGameOver = false);
+
             }
         }
 

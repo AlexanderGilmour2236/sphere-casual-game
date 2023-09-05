@@ -7,11 +7,9 @@ namespace sphereGame.level
 {
     public class LevelController
     {
-        private const float DISTANCE_TO_OPEN_DOOR = 20;
-        private const float DISTANCE_TO_WIN_LEVEL = 0.5f;
-
         private readonly LevelCollectionData _levelCollectionData;
-        
+
+        private float _distanceToOpenDoor = 20;
         private DoorView _doorView;
         private Transform _playerTransform;
         private readonly Transform _levelPatternPosition;
@@ -22,6 +20,11 @@ namespace sphereGame.level
         {
             _levelCollectionData = levelCollectionData;
             _levelPatternPosition = levelPatternPosition;
+        }
+
+        public void setDistanceToOpenDoor(float distance)
+        {
+            _distanceToOpenDoor = distance;
         }
 
         public event Action playerReachedDoorPosition;
@@ -39,7 +42,7 @@ namespace sphereGame.level
             {
                 playerReachedDoorPosition?.Invoke();
             }
-            else if (distanceToPlayer <= DISTANCE_TO_OPEN_DOOR)
+            else if (distanceToPlayer <= _distanceToOpenDoor)
             {
                 _doorView.openTheDoor();
             }
@@ -61,6 +64,7 @@ namespace sphereGame.level
         
         public void changeDoorSize(float sphereSize)
         {
+            _distanceToOpenDoor = sphereSize * 3;
             if (_doorView != null)
             {
                 _doorView.setDoorScale(sphereSize);
