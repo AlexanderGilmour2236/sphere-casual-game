@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using misc;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace sphereGame.sphere
 {
@@ -86,6 +87,7 @@ namespace sphereGame.sphere
                     {
                         throwableRunOut?.Invoke(_currentThrowableView);
                         throwSphere();
+                        setSphereControllerState(SphereControllerState.NONE);
                     }
                     break;
             }
@@ -239,6 +241,8 @@ namespace sphereGame.sphere
 
             _throwableViewsPool.Dispose();
             _currentSphereControllerState = SphereControllerState.NONE;
+            
+            Object.Destroy(_currentPlayerSphereView.gameObject);
         }
 
         public void onTapDown()

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using mics.input;
+using sphereGame.level;
 using sphereGame.obstacle;
 using sphereGame.sphere;
+using sphereGame.UI;
 using tuesdayPizza;
 using UnityEngine;
 
@@ -11,7 +13,11 @@ namespace sphereGame
     {
         [Header("Main")]
         [SerializeField] private InputSystem _inputSystem;
+        
+        [Header("Level")]
         [SerializeField] private Transform _levelStartPoint;
+        [SerializeField] private Transform _levelPatternPosition;
+        [SerializeField] private LevelCollectionData _levelCollectionData;
         
         [Header("Sphere")]
         [SerializeField] private SphereViewFactory _sphereViewFactory;
@@ -23,6 +29,14 @@ namespace sphereGame
         [Header("Camera")]
         [SerializeField] private Camera _camera;
         [SerializeField] private Vector3 _cameraRelativeOffset;
+        
+        [Header("UI")] 
+        [SerializeField] private GameHUD _gameHUD;
+
+        public GameHUD gameHUD
+        {
+            get { return _gameHUD; }
+        }
 
         public new Camera camera
         {
@@ -57,6 +71,15 @@ namespace sphereGame
         public Vector3 cameraRelativeOffset
         {
             get { return _cameraRelativeOffset; }
+        }
+        public Transform levelPatternPosition
+        {
+            get { return _levelPatternPosition; }
+        }
+
+        public LevelCollectionData levelCollectionData
+        {
+            get { return _levelCollectionData; }
         }
     }
 }

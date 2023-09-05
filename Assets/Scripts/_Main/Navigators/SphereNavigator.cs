@@ -4,6 +4,7 @@ using mics.input;
 using sphereGame.camera;
 using sphereGame.level;
 using sphereGame.obstacle;
+using sphereGame.UI;
 using tuesdayPizza;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -23,6 +24,12 @@ namespace sphereGame.sphere
         
         private List<ObstacleView> _currentObstacles;
         private LevelController _levelController;
+        private GameHUD _gameHUD;
+        private bool _isGameOver;
+
+        private int _currentLevelIndex;
+        private LevelPatternData _currentLevelPattern;
+        private LevelPatternView _currentLevelPatternView;
 
         public SphereNavigator(SGSceneAccessor sceneAccessor, Navigator parent) : base(parent)
         {
@@ -30,8 +37,9 @@ namespace sphereGame.sphere
             _sphereController = new SphereController(_sceneAccessor.sphereViewFactory);
             _obstaclesController = new ObstaclesController();
             _cameraController = new CameraController(_sceneAccessor.camera, _sceneAccessor.cameraRelativeOffset);
-            _levelController = new LevelController();
-                
+            _levelController = new LevelController(_sceneAccessor.levelCollectionData, _sceneAccessor.levelPatternPosition);
+            _gameHUD = _sceneAccessor.gameHUD;
+            
             _inputSystem = sceneAccessor.inputSystem;
             _inputSystem.addInputListener(this);
 
@@ -43,15 +51,23 @@ namespace sphereGame.sphere
         public override void go()
         {
             base.go();
+
+            startCurrentLevel();
+        }
+
+        private void startCurrentLevel()
+        {
+            _isGameOver = false;
+            _currentLevelPattern = _levelController.getLevelPattern(_currentLevelIndex);
+            _currentLevelPatternView = _levelController.loadLevel(_currentLevelPattern.levelPatternView);
             
-            _levelController.loadLevel();
-            _sphereController.init(getNewSphereData(), _sceneAccessor.levelStartPoint);
+            _sphereController.init(_currentLevelPattern.sphereData, _sceneAccessor.levelStartPoint);
             _sphereController.start();
             
             _cameraController.setTarget(_sphereController.currentPlayerSphereView.transform);
             _cameraController.setOffsetScale(_sphereController.playerSphereScale);
             
-            _currentObstacles = _obstaclesController.spawnObstacles();
+            _currentObstacles = _obstaclesController.setObstacles(_currentLevelPatternView.obstacles);
             
             _obstaclesController.setExplosionParticleSystem(_sceneAccessor.explosionView);
             _obstaclesController.setObstacleCollisionTag(SphereGameTags.THROWABLE_TAG);
@@ -77,13 +93,46 @@ namespace sphereGame.sphere
         }
 
         private void onPlayerReachedFinish()
+        {   
+            onGameOver(true);
+
+        }
+
+        private void startNewLevel()
         {
-            Debug.Log("YOU WIN!!!");
+            _levelController.dispose();
+            _sphereController.dispose();
+            _obstaclesController.dispose();
+            _isGameOver = false;
+            
+            startCurrentLevel();
+            Debug.Log("START NEW LEVEL!!!");
         }
 
         private void onThrowableRunOut(ThrowableView throwableView)
         {
-            _cameraController.setTarget(null);
+            onGameOver(false);
+        }
+
+        private void onGameOver(bool isWin)
+        {
+            if (!_isGameOver)
+            {
+                _isGameOver = true;
+                if (isWin)
+                {
+                    _currentLevelIndex++;
+                    _gameHUD.playGameOverSequence(startNewLevel, () => _isGameOver = false);
+                    Debug.Log("YOU WIN!!!");
+
+                }
+                else
+                {
+                    _cameraController.setTarget(null);
+                    _gameHUD.playGameOverSequence(startNewLevel, () => _isGameOver = false);
+                    Debug.Log("YOU LOSE!!!");
+                }
+            }
         }
 
         private void onPlayerSphereSizeChange(float sphereSize)
@@ -143,6 +192,7 @@ namespace sphereGame.sphere
         public override void tick()
         {
             base.tick();
+            
             _sphereController.tick();
             _cameraController.tick();
             _levelController.tick();
@@ -150,7 +200,10 @@ namespace sphereGame.sphere
 
         public void onTapDown()
         {
-            _sphereController.onTapDown();
+            if (!_isGameOver)
+            {
+                _sphereController.onTapDown();
+            }
         }
 
         public void onTapUp()

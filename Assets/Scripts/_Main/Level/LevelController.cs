@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace sphereGame.level
 {
@@ -8,10 +9,21 @@ namespace sphereGame.level
     {
         private const float DISTANCE_TO_OPEN_DOOR = 20;
         private const float DISTANCE_TO_WIN_LEVEL = 0.5f;
+
+        private readonly LevelCollectionData _levelCollectionData;
         
         private DoorView _doorView;
         private Transform _playerTransform;
-        
+        private readonly Transform _levelPatternPosition;
+        private LevelPatternView _currentLevelPatternView;
+
+
+        public LevelController(LevelCollectionData levelCollectionData, Transform levelPatternPosition)
+        {
+            _levelCollectionData = levelCollectionData;
+            _levelPatternPosition = levelPatternPosition;
+        }
+
         public event Action playerReachedDoorPosition;
 
         public void setPlayerTransform(Transform transform)
@@ -33,9 +45,18 @@ namespace sphereGame.level
             }
         }
 
-        public void loadLevel()
+        public LevelPatternView loadLevel(LevelPatternView levelPatternPrefab)
         {
-            _doorView = Object.FindObjectOfType<DoorView>();
+            if (_currentLevelPatternView != null)
+            {
+                Object.Destroy(_currentLevelPatternView.gameObject);
+                _currentLevelPatternView = null;
+            }
+
+            _currentLevelPatternView = Object.Instantiate(levelPatternPrefab, _levelPatternPosition);
+            _doorView = _currentLevelPatternView.doorView;
+            
+            return _currentLevelPatternView;
         }
         
         public void changeDoorSize(float sphereSize)
@@ -44,6 +65,21 @@ namespace sphereGame.level
             {
                 _doorView.setDoorScale(sphereSize);
             }
+        }
+
+        public void dispose()
+        {
+            if (_currentLevelPatternView != null)
+            {
+                Object.Destroy(_currentLevelPatternView.gameObject);
+                _currentLevelPatternView = null;
+            }
+        }
+
+        public LevelPatternData getLevelPattern(int currentLevelIndex)
+        {
+            return _levelCollectionData.levelPatternsCollection[
+                    currentLevelIndex % _levelCollectionData.levelPatternsCollection.Count];
         }
     }
 }

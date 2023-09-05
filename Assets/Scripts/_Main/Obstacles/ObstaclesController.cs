@@ -40,11 +40,9 @@ namespace sphereGame.obstacle
             }
         }
 
-        public List<ObstacleView> spawnObstacles( /* Obstacles Data */)
+        public List<ObstacleView> setObstacles(List<ObstacleView> obstacleViews)
         {
-            // TODO: temp solution, change to level loader
-            _obstacleViews = new List<ObstacleView>();
-            _obstacleViews.AddRange(Object.FindObjectsOfType<ObstacleView>());
+            _obstacleViews = obstacleViews;
             
             foreach (ObstacleView obstacleView in _obstacleViews)
             {
